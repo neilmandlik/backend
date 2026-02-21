@@ -2,13 +2,14 @@
 
 import json
 import os
-import sys
 from typing import Dict, Optional
 import anthropic
+from dotenv import load_dotenv
 
-# Add parent directory to path to import config
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import ANTHROPIC_API_KEY, CLAUDE_MODEL
+# Load config directly (avoid import issues)
+load_dotenv()
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+CLAUDE_MODEL = "claude-sonnet-4-5-20250514"
 from services.analytics import (
     compute_overview, compute_breakdown, compute_competitors,
     compute_objections, compute_icp,
