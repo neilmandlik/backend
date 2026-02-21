@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import hubspot_mock, deals, analytics, insights, transcripts
@@ -8,7 +9,10 @@ app = FastAPI(title="Win/Loss Intelligence API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",  # Local development
+        os.getenv("FRONTEND_URL", "https://*.github.io"),  # Production (set via env var)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
