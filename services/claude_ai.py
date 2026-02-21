@@ -1,9 +1,15 @@
 """Claude AI service with 7 prompt templates and response caching."""
 
 import json
+import os
 from typing import Dict, Optional
 import anthropic
-from config import ANTHROPIC_API_KEY, CLAUDE_MODEL
+from dotenv import load_dotenv
+
+# Load config directly (avoid import issues)
+load_dotenv()
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+CLAUDE_MODEL = "claude-sonnet-4-5-20250514"
 from services.analytics import (
     compute_overview, compute_breakdown, compute_competitors,
     compute_objections, compute_icp,

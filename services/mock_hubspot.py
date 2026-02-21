@@ -22,7 +22,7 @@ Embedded discoverable patterns:
 import random
 from typing import List, Optional, Set
 from datetime import datetime, timedelta
-from models.hubspot import Company, Contact, Deal, ConversationSignal
+from models.hubspot import Company, Contact, Deal
 
 # Global data store
 _companies: List[Company] = []
@@ -155,42 +155,6 @@ INDUSTRY_SUFFIXES = {
     "Retail/E-commerce": ["Retail", "Commerce", "Brands", "Marketplace", "Direct"],
     "Manufacturing": ["Industries", "Manufacturing", "Engineering", "Works", "Corp"],
 }
-
-SALES_REPS = [
-    "Ravi Mehta", "Priya Kapoor", "Aditya Sharma", "Neha Reddy",
-    "Jason Park", "Sarah Mitchell", "Vikram Desai", "Emily Chen",
-]
-
-
-def _generate_win_reason(source: str, product_line: str, seniority: str, competitor: Optional[str]) -> str:
-    """Derive a win reason from deal characteristics."""
-    reasons = []
-    if source == "Customer Referral":
-        reasons.append("Strong customer reference sold the deal")
-    if seniority in ("C-Level", "VP"):
-        reasons.append("Executive sponsor drove fast decision")
-    if product_line == "Full Platform":
-        reasons.append("Consolidated platform value over point solutions")
-    if competitor == "Mercer Mettl":
-        reasons.append("Superior AI proctoring beat incumbent")
-    elif competitor == "Lightcast":
-        reasons.append("Deeper skills taxonomy won evaluation")
-    elif competitor == "TestGorilla":
-        reasons.append("Enterprise-grade security and compliance")
-    elif competitor == "HackerRank":
-        reasons.append("Broader assessment coverage beyond coding")
-    elif competitor == "Eightfold AI":
-        reasons.append("Better ROI on skills intelligence investment")
-    elif competitor is None:
-        reasons.append("No competitive alternative — greenfield win")
-    if source in ("G2/Marketplace", "Inbound (Content/SEO)"):
-        reasons.append("Product-led momentum from self-serve trial")
-    if product_line == "TA":
-        reasons.append("AI Interview Agent (Tara) differentiation")
-    if product_line == "Skills Intelligence":
-        reasons.append("Skills analytics depth unmatched in market")
-    return random.choice(reasons) if reasons else "Strong product-market fit"
-
 
 CITIES = [
     ("Bangalore", "KA"), ("Mumbai", "MH"), ("Hyderabad", "TG"), ("Pune", "MH"),
@@ -328,217 +292,6 @@ def _compute_win_probability(
     return max(0.05, min(0.95, prob))
 
 
-# --- CONVERSATION SIGNAL TEMPLATES ---
-SIGNAL_TEMPLATES = {
-    "Pricing": {
-        "negative": [
-            "Your per-candidate pricing is 3x what we pay now",
-            "At this price point, we can't justify the switch from our current tool",
-            "We need volume discounts — $12 per assessment doesn't scale for 10K hires",
-            "The ROI math doesn't work unless you can bring the per-seat cost down 40%",
-            "Finance flagged the annual cost as 2x our current budget for assessments",
-        ],
-        "neutral": [
-            "We're comparing pricing models across three vendors right now",
-            "The pricing is in the range we expected for an enterprise platform",
-        ],
-        "positive": [
-            "The per-candidate model actually works better for our seasonal hiring",
-            "Compared to the cost of a bad hire, this is very reasonable",
-        ],
-    },
-    "Product Gap": {
-        "negative": [
-            "We need deeper ATS integration with Greenhouse",
-            "Without video interview recording, we can't replace HireVue",
-            "The skills taxonomy doesn't cover our niche engineering roles",
-            "We need custom assessment builders — the templates are too rigid",
-            "No support for our compliance requirements in healthcare hiring",
-        ],
-        "neutral": [
-            "The product roadmap looks promising, especially the AI interviewer",
-            "We'd want to see the Workday integration before committing",
-        ],
-        "positive": [
-            "The AI proctoring feature is ahead of anything else we've seen",
-            "Your skills intelligence layer is genuinely differentiated",
-        ],
-    },
-    "Integration": {
-        "negative": [
-            "If it doesn't connect to Workday, it's a non-starter for us",
-            "We need native Greenhouse integration — Zapier workarounds won't fly",
-            "Our IT team said the SSO setup looked more complex than competitors",
-            "The API rate limits are a problem for our high-volume use case",
-        ],
-        "neutral": [
-            "We're evaluating how the platform fits into our existing HR tech stack",
-            "The REST API looks solid, we'd just need to validate the webhook support",
-        ],
-        "positive": [
-            "The SAP SuccessFactors integration was seamless in our POC",
-            "Having native Slack notifications for hiring managers is a nice touch",
-        ],
-    },
-    "Requirement Mismatch": {
-        "negative": [
-            "We only need coding assessments, not the full platform",
-            "This is overkill for what we need — we're a 50-person startup",
-            "We're looking for a point solution, not an enterprise suite",
-            "The skills intelligence piece isn't relevant — we just need TA",
-            "We don't need AI interviews, just simple skills tests",
-        ],
-        "neutral": [
-            "Let us revisit once we've scaled to the point where we need the full platform",
-            "We might need this next year, but right now it's more than we need",
-        ],
-        "positive": [
-            "Actually, the bundled approach saves us from managing three vendors",
-        ],
-    },
-    "Champion Risk": {
-        "negative": [
-            "Our VP of TA just left, new one wants to re-evaluate everything",
-            "The hiring freeze means our champion can't push this through procurement",
-            "Our CHRO is leaving in Q2, the new one will have different priorities",
-            "The project sponsor moved to a different business unit last month",
-        ],
-        "neutral": [
-            "We need to get the new VP aligned before we can move forward",
-            "There's a leadership transition happening, but our Director is still supportive",
-        ],
-        "positive": [
-            "Our CHRO is personally championing this — it's a board-level priority",
-        ],
-    },
-    "Competitive Pressure": {
-        "negative": [
-            "HackerRank already offered us a 40% discount to renew",
-            "Eightfold gave us a free pilot and their AI matching is impressive",
-            "Codility is bundling proctoring for free — hard to compete with that",
-            "TestGorilla is half the price and covers 80% of what we need",
-            "Our current vendor just launched the exact features we asked you about",
-        ],
-        "neutral": [
-            "We're running parallel evaluations with two other vendors",
-            "The competitive landscape is crowded — we need to see clear differentiation",
-        ],
-        "positive": [
-            "None of the competitors have the skills intelligence depth you offer",
-            "Your AI interview agent is genuinely unique in the market",
-        ],
-    },
-}
-
-# Map loss reasons / objections to likely conversation signal themes
-LOSS_REASON_THEME_MAP = {
-    "Chose cheaper point solution": ["Pricing", "Requirement Mismatch"],
-    "Went with incumbent vendor": ["Competitive Pressure", "Champion Risk"],
-    "Only needed coding - not full platform": ["Requirement Mismatch", "Pricing"],
-    "ATS integration gap": ["Integration", "Product Gap"],
-    "Budget freeze - hiring slowdown": ["Pricing", "Champion Risk"],
-    "Procurement delays": ["Champion Risk", "Pricing"],
-    "No AI interview need": ["Requirement Mismatch"],
-    "Chose competitor's brand": ["Competitive Pressure", "Product Gap"],
-    "Chose Eightfold/competitor": ["Competitive Pressure", "Product Gap"],
-    "Not ready for skills transformation": ["Requirement Mismatch", "Champion Risk"],
-    "HCM vendor bundled skills module": ["Competitive Pressure", "Integration"],
-    "Budget allocated elsewhere": ["Pricing", "Champion Risk"],
-    "Complexity concerns": ["Product Gap", "Integration"],
-    "Chose to build in-house": ["Competitive Pressure", "Requirement Mismatch"],
-    "No executive sponsor": ["Champion Risk"],
-}
-
-OBJECTION_THEME_MAP = {
-    "Pricing per-candidate too high": "Pricing",
-    "Already using HackerRank/competitor": "Competitive Pressure",
-    "Need deeper ATS integration": "Integration",
-    "Concerned about AI bias in hiring": "Product Gap",
-    "Only need coding assessments": "Requirement Mismatch",
-    "Proctoring not enterprise-grade enough": "Product Gap",
-    "Implementation timeline too long": "Integration",
-    "Need more language support": "Product Gap",
-    "Candidate experience concerns": "Product Gap",
-    "ROI unclear vs current process": "Pricing",
-    "Skills taxonomy too complex": "Product Gap",
-    "Integration gap with Workday/SAP": "Integration",
-    "Already invested in Eightfold": "Competitive Pressure",
-    "Need proof of ROI first": "Pricing",
-    "Data privacy concerns": "Product Gap",
-    "Change management too heavy": "Requirement Mismatch",
-    "Not ready for skills-first model": "Requirement Mismatch",
-    "Need internal mobility features": "Product Gap",
-    "Concerned about adoption rates": "Champion Risk",
-    "Budget not allocated for SI": "Pricing",
-}
-
-
-def _generate_conversation_signals(deal_stage: str, loss_reason: Optional[str],
-                                   objections: List[str], competitor: Optional[str]) -> List[ConversationSignal]:
-    """Generate realistic conversation signals based on deal outcome and context."""
-    signals = []  # type: List[ConversationSignal]
-
-    # Determine which themes to pull from
-    relevant_themes = set()  # type: Set[str]
-
-    if loss_reason and loss_reason in LOSS_REASON_THEME_MAP:
-        for theme in LOSS_REASON_THEME_MAP[loss_reason]:
-            relevant_themes.add(theme)
-
-    for obj in objections:
-        if obj in OBJECTION_THEME_MAP:
-            relevant_themes.add(OBJECTION_THEME_MAP[obj])
-
-    # If competitor exists, always add Competitive Pressure
-    if competitor:
-        relevant_themes.add("Competitive Pressure")
-
-    if deal_stage == "closedlost":
-        # Lost deals: 2-4 signals, mostly negative
-        if not relevant_themes:
-            relevant_themes = set(random.sample(list(SIGNAL_TEMPLATES.keys()), 2))
-
-        n_signals = random.randint(2, min(4, len(relevant_themes) + 1))
-        theme_list = list(relevant_themes)
-        random.shuffle(theme_list)
-
-        for theme in theme_list[:n_signals]:
-            templates = SIGNAL_TEMPLATES[theme]
-            # 75% negative, 25% neutral for lost deals
-            if random.random() < 0.75 and templates["negative"]:
-                sentiment = "negative"
-            else:
-                sentiment = "neutral"
-            quote = random.choice(templates[sentiment])
-            source = random.choice(["Fireflies", "Fireflies", "HubSpot Notes"])  # 2:1 Fireflies bias
-            signals.append(ConversationSignal(
-                theme=theme, quote=quote, source=source, sentiment=sentiment
-            ))
-    else:
-        # Won deals: 0-2 signals, mostly positive/neutral
-        n_signals = random.choices([0, 1, 2], weights=[40, 40, 20])[0]
-        if n_signals > 0:
-            available_themes = list(relevant_themes) if relevant_themes else list(SIGNAL_TEMPLATES.keys())
-            random.shuffle(available_themes)
-            for theme in available_themes[:n_signals]:
-                templates = SIGNAL_TEMPLATES[theme]
-                # Won deals: 50% positive, 40% neutral, 10% negative
-                roll = random.random()
-                if roll < 0.5 and templates["positive"]:
-                    sentiment = "positive"
-                elif roll < 0.9:
-                    sentiment = "neutral"
-                else:
-                    sentiment = "negative"
-                quote = random.choice(templates[sentiment])
-                source = random.choice(["Fireflies", "HubSpot Notes"])
-                signals.append(ConversationSignal(
-                    theme=theme, quote=quote, source=source, sentiment=sentiment
-                ))
-
-    return signals
-
-
 def generate_data():
     global _companies, _contacts, _deals, _generated
     if _generated:
@@ -650,20 +403,9 @@ def generate_data():
         if n_objections > 0:
             objections = random.sample(obj_pool, min(n_objections, len(obj_pool)))
 
-        # Win reason for won deals
-        win_reason = None
-        if won:
-            win_reason = _generate_win_reason(source, product_line, contact.seniority, competitor)
-
-        # Sales rep
-        sales_rep = random.choice(SALES_REPS)
-
         # Deal name
         product_name = random.choice(PRODUCT_NAMES[product_line])
         deal_name = f"{company.name} - {product_name}"
-
-        # Generate conversation signals
-        conv_signals = _generate_conversation_signals(stage, loss_reason, objections, competitor)
 
         _deals.append(Deal(
             id=f"deal_{i+1:03d}",
@@ -676,14 +418,11 @@ def generate_data():
             product_line=product_line,
             deal_source=source,
             loss_reason=loss_reason,
-            win_reason=win_reason,
             competitor=competitor,
-            sales_rep=sales_rep,
             company_id=company.id,
             contact_id=contact.id,
             cycle_days=cycle,
             objections=objections,
-            conversation_signals=conv_signals,
         ))
 
     _generated = True
