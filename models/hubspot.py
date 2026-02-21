@@ -24,6 +24,13 @@ class Contact(BaseModel):
     company_id: str
 
 
+class ConversationSignal(BaseModel):
+    theme: str  # Pricing, Product Gap, Integration, Requirement Mismatch, Champion Risk, Competitive Pressure
+    quote: str
+    source: str  # "Fireflies" or "HubSpot Notes"
+    sentiment: str  # "negative", "neutral", "positive"
+
+
 class Deal(BaseModel):
     id: str
     name: str
@@ -35,11 +42,14 @@ class Deal(BaseModel):
     product_line: str  # "TA", "Skills Intelligence", "Full Platform"
     deal_source: str  # Referral, Inbound, Outbound, Partner, Event, G2
     loss_reason: Optional[str] = None
+    win_reason: Optional[str] = None
     competitor: Optional[str] = None
+    sales_rep: str = ""
     company_id: str
     contact_id: str
     cycle_days: int
     objections: List[str] = []
+    conversation_signals: List[ConversationSignal] = []
 
 
 class DealEnriched(Deal):
