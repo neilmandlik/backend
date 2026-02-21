@@ -1,8 +1,13 @@
 """Claude AI service with 7 prompt templates and response caching."""
 
 import json
+import os
+import sys
 from typing import Dict, Optional
 import anthropic
+
+# Add parent directory to path to import config
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import ANTHROPIC_API_KEY, CLAUDE_MODEL
 from services.analytics import (
     compute_overview, compute_breakdown, compute_competitors,
